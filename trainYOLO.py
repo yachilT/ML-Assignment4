@@ -54,17 +54,13 @@ def get_dataloader(X, y, transform, batch_size=32):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataloader
 
-def load_vgg19(num_classes=102):
-    vgg_model = torchvision.models.vgg19(pretrained=True)
-    for param in vgg_model.parameters():
-        param.requires_grad = False  # Freezing the base model
-
-    # Modify the final layer to match the number of classes (102 flowers)
-    vgg_model.classifier[-1] = nn.Linear(vgg_model.classifier[-1].in_features, num_classes)
-
+def load_YOLO(num_classes=102):
     # Move model to GPU if available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    vgg_model.to(device)
+    yolo_model = torch.hub.load("ultralytics/yolov5", "yolov5s", classes=10, autoshape=False)
+
+    yolo_model.to(device)
+
 
     # Step 4: Image Preprocessing for YOLOv5 segmentation and VGG19 classification
     transform = transforms.Compose([
@@ -72,7 +68,7 @@ def load_vgg19(num_classes=102):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    return vgg_model, transform
+    return yolo_model, transform
 
 def objective(trial):
     # Suggest hyperparameters for tuning
@@ -81,7 +77,7 @@ def objective(trial):
 
     # Load the dataset and create data loaders with the current batch size
     X_train, X_val, X_test, y_train, y_val, y_test = load_dataset('flowers/jpg/', 'flowers/imagelabels.mat')
-    vgg_model, transform = load_vgg19()
+    vgg_model, transform = load_YOLO()
     
     train_loader = get_dataloader(X_train, y_train, transform, batch_size=batch_size)
     val_loader = get_dataloader(X_val, y_val, transform, batch_size=batch_size)
@@ -96,18 +92,18 @@ def main():
 
     # study = optuna.create_study(direction='maximize')  # We want to maximize validation accuracy
     # study.optimize(objective, n_trials=5)  # Number of trials to run
-    batch_size = 32
-    learning_rate = 0.0053
+
 
     X_train, X_val, X_test, y_train, y_val, y_test = load_dataset('flowers/jpg/', 'flowers/imagelabels.mat')
-    vgg_model, transform = load_vgg19()
+    yolo_model, transform = load_YOLO()
+    opt_batch_size = 32
+    opt_learning_rate = 0.001
+    train_loader = get_dataloader(X_train, y_train, transform, batch_size=opt_batch_size)
+    val_loader = get_dataloader(X_val, y_val, transform, batch_size=opt_batch_size)
+    test_loader = get_dataloader(X_test, y_test, transform, batch_size=opt_batch_size)
 
-    train_loader = get_dataloader(X_train, y_train, transform, batch_size=batch_size)
-    val_loader = get_dataloader(X_val, y_val, transform, batch_size=batch_size)
-    test_loader = get_dataloader(X_test, y_test, transform, batch_size=batch_size)
-
-    results = train_last_layer(vgg_model, train_loader, val_loader, test_loader, num_epochs=10, learning_rate=learning_rate)
-    plot_loss_accuracy(*results, learning_rate, batch_size)
+    results = train_last_layer(yolo_model, train_loader, val_loader, test_loader, num_epochs=5, learning_rate=opt_learning_rate)
+    plot_loss_accuracy(*results, opt_learning_rate,opt_learning_rate)
 
 
 

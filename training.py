@@ -5,9 +5,16 @@ import matplotlib.pyplot as plt
 
 
 
-def train_last_layer(model, train_loader, val_loader, test_loader, num_epochs=10, learning_rate=0.001):
+def train_last_layer(model, train_loader, val_loader, test_loader, num_epochs=10, learning_rate=0.001, last_train=True):
     # Automatically detect the device (GPU or CPU)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if torch.cuda.is_available():
+        print("using cuda")
+        proccessor = "cuda"
+    else:
+        print("using cpu :(")
+        proccessor = "cpu"
+    device = torch.device(proccessor)
 
     # Move the model to the selected device (GPU or CPU)
     model.to(device)
@@ -45,7 +52,6 @@ def train_last_layer(model, train_loader, val_loader, test_loader, num_epochs=10
             loss.backward()
             optimizer.step()
 
-            # Track statistics
             with torch.no_grad():
                 running_loss += loss.item()
                 _, predicted = torch.max(outputs.data, 1)
@@ -108,9 +114,9 @@ def train_last_layer(model, train_loader, val_loader, test_loader, num_epochs=10
               f"Train Loss: {train_losses[-1]:.4f}, Train Accuracy: {train_accuracies[-1]:.2f}%, "
               f"Validation Loss: {val_losses[-1]:.4f}, Validation Accuracy: {val_accuracies[-1]:.2f}%, "
               f"Test Loss: {test_losses[-1]:.4f}, Test Accuracy: {test_accuracies[-1]:.2f}%")
-    return
+    return train_losses, val_losses, test_losses, train_accuracies, val_accuracies, test_accuracies
 
-def plot_loss_accuracy(train_losses, val_losses, test_losses, train_accuracies, val_accuracies, test_accuracies):
+def plot_loss_accuracy(train_losses, val_losses, test_losses, train_accuracies, val_accuracies, test_accuracies, learning_rate, batch_size):
 
     # Plot the loss
     plt.figure(figsize=(10, 5))
@@ -119,8 +125,10 @@ def plot_loss_accuracy(train_losses, val_losses, test_losses, train_accuracies, 
     plt.plot(test_losses, label='Test Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title('Loss vs. Epoch')
+    plt.title(f'Loss vs. Epoch\nLearning rate: {learning_rate:.4f}, batch size: {batch_size}')
     plt.legend()
+
+    plt.savefig("/home/yachil/repos/ML-Assignment4/Loss.png")
     plt.show()
 
     # Plot the accuracy
@@ -130,6 +138,8 @@ def plot_loss_accuracy(train_losses, val_losses, test_losses, train_accuracies, 
     plt.plot(test_accuracies, label='Test Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
-    plt.title('Accuracy vs. Epoch')
+    plt.title(f'Accuracy vs. Epoch\nLearning rate: {learning_rate:.4f}, batch size: {batch_size}')
     plt.legend()
+
+    plt.savefig("/home/yachil/repos/ML-Assignment4/Acc.png")
     plt.show()
