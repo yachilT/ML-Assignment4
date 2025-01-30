@@ -14,18 +14,23 @@ def plot_results(csv_path):
     # Plot Loss
     plt.subplot(2, 1, 1)
     plt.plot(df['epoch'], df['train/loss'], label='Train Loss')
-    plt.plot(df['epoch'], df['test/loss'], label='Validation Loss')
+    plt.plot(df['epoch'], df['valid/loss'], label='Validation Loss')
+    plt.plot(df['epoch'], df['test/loss'], label='Test Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title('Training and Validation Loss')
+    plt.title('Cross-Entropy-Loss')
+    plt.grid()
     plt.legend()
     
     # Plot Accuracy
     plt.subplot(2, 1, 2)
-    plt.plot(df['epoch'], df['metrics/accuracy_top5'], label='Train Accuracy')
+    plt.plot(df['epoch'], df['train/acc'], label='Train Accuracy')
+    plt.plot(df['epoch'], df['valid/acc'], label='Validation Accuracy')
+    plt.plot(df['epoch'], df['test'], label='Test Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.title('Training and Validation Accuracy')
+    plt.grid()
     plt.legend()
     
     plt.tight_layout()
@@ -33,5 +38,5 @@ def plot_results(csv_path):
     plt.show()
 
 # Example usage
-csv_path = 'yolov5/runs/train-cls/exp3/results.csv'
+csv_path = 'yolov5/runs/train-cls/exp6/results.csv'
 plot_results(csv_path)
